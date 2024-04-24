@@ -6,7 +6,7 @@ from time import sleep, perf_counter_ns
 
 
 
-########################################################
+####################################################################################################
 def init_argparse() -> None:
     """Doc string"""
     parser = argparse.ArgumentParser()
@@ -33,7 +33,7 @@ def init_argparse() -> None:
 
 
 
-########################################################
+####################################################################################################
 def strip_url_domain(target_url: str) -> str:
     """Doc string"""
     url_domain = target_url.split('/')[2]
@@ -42,7 +42,7 @@ def strip_url_domain(target_url: str) -> str:
 
 
 
-########################################################
+####################################################################################################
 def generate_output_file_name(url_domain: str) -> str:
     """Doc string"""
     # regex to match and replace special characters
@@ -53,7 +53,7 @@ def generate_output_file_name(url_domain: str) -> str:
 
 
 
-########################################################
+####################################################################################################
 def get_url(target_url: str, http_method: str='GET') -> object:
     """Doc string"""
     url_request_result = Request(target_url, method=http_method)
@@ -62,7 +62,7 @@ def get_url(target_url: str, http_method: str='GET') -> object:
 
 
 
-########################################################
+####################################################################################################
 def run() -> int:
     """Doc string"""
 
