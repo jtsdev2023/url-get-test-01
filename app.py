@@ -6,6 +6,19 @@ from time import sleep, perf_counter_ns
 
 
 
+# match urls
+regex_pattern = re.compile(r'^https*://\w+\.\w+(\.\w+)*/')
+
+
+
+####################################################################################################
+# string formatting
+OUTPUT_STRING = '{0:<10}{1:12}{2:>10}{3}{4:>10}'
+OUTPUT_FORMAT = (':::::', {}, ':::::', ' ', {})
+
+
+
+
 ####################################################################################################
 def init_argparse() -> None:
     """Doc string"""
@@ -77,4 +90,16 @@ def run() -> int:
 
 ####################################################################################################
 if __name__ == '__main__':
-    run()
+    # run()
+    cli_arguments = init_argparse()
+
+    for url in cli_arguments.url:
+        url_index_number = cli_arguments.url.index(url)
+        timestamp = datetime.now().strftime('%Y%m%d - %H%M%S.%f')
+        start_time_ns = perf_counter_ns()
+        url_request_result = requests.request(cli_arguments.method, url, timeout=30)
+        stop_time_ns = perf_counter_ns()
+
+        # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
+        elapsed_time_seconds = (stop_time_ns - start_time_ns) / 1e9
+        print(url_index_number, url, timestamp, elapsed_time_seconds, sep='\n')
