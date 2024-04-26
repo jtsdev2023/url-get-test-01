@@ -130,5 +130,7 @@ if __name__ == '__main__':
         stop_time_ns = perf_counter_ns()
 
         # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
-        elapsed_time_seconds = 
+        elapsed_time_seconds = ""
         print(url_index_number, url, timestamp, elapsed_time_seconds, sep='\n')
+
+        
