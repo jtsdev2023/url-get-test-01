@@ -32,6 +32,9 @@ OUTPUT_FILE_FORMAT_STRING = (
     '\n{:<10}{:18}{:>10}{:>5}\n\n{:>10}\n'
 )
 
+# timestamp, url, elapsed_time_seconds
+CSV_FORMAT_STRING = '{},{},{}\n'
+
 
 # other constants
 TIME_DIVISOR = 1e9
@@ -99,7 +102,7 @@ def append_output_to_file(
 
 ####################################################################################################
 def calculate_elapsed_time(
-        start_time_ns: int, stop_time_ns: int, time_divisor: int=TIME_DIVISOR) -> int:
+        start_time_ns: int, stop_time_ns: int, time_divisor: int) -> int:
     return (stop_time_ns - start_time_ns) / time_divisor
 
 
@@ -111,59 +114,38 @@ def run() -> int:
 
     cli_arguments = init_argparse()
 
-    for url in cli_arguments.url:
-        url_index_number = cli_arguments.url.index(url)
-        url_domain = strip_url_domain(url)
+    for _url in cli_arguments.url:
 
-        # file extension (.txt or .csv etc.) set here
-        # NOTE: maybe create a class w/ methods that create specific file type?
-        #
-        text_output_file_name = generate_output_file_name(url_domain, 'txt')
-        csv_output_file_name = generate_output_file_name(url_domain, 'csv')
-
-        timestamp = datetime.now().strftime(TIMESTAMP_STR_FORMAT)
-
-        start_time_ns = perf_counter_ns()
-        url_request_result = requests.request(cli_arguments.method, url, timeout=30)
-        stop_time_ns = perf_counter_ns()
-
-        # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
-        elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns, 1e9)
-
-
-
-
-
-####################################################################################################
-if __name__ == '__main__':
-    # run()
-    cli_arguments = init_argparse()
-
-    for url in cli_arguments.url:
-        
         loop_counter = 0
         while loop_counter < cli_arguments.repeat:
 
-            url_index_number = cli_arguments.url.index(url)
-            timestamp = datetime.now().strftime('%Y%m%d - %H%M%S.%f')
+            url_index_number = cli_arguments.url.index(_url)
+            url_domain = strip_url_domain(_url)
+
+            # file extension (.txt or .csv etc.) set here
+            # NOTE: maybe create a class w/ methods that create specific file type?
+            #
+            text_output_file_name = generate_output_file_name(url_domain, 'txt')
+            csv_output_file_name = generate_output_file_name(url_domain, 'csv')
+
+            timestamp = datetime.now().strftime(TIMESTAMP_STR_FORMAT)
+
             start_time_ns = perf_counter_ns()
-            url_request_result = requests.request(cli_arguments.method, url, timeout=30)
+            url_request_result = requests.request(cli_arguments.method, _url, timeout=30)
             stop_time_ns = perf_counter_ns()
 
             # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
-            elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns)
+            elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns, TIME_DIVISOR)
 
-            # print(url_index_number, url, timestamp, elapsed_time_seconds, sep='\n')
-            
             stdout_string = STDOUT_FORMAT_STRING.format(
                 OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url,
+                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
                 OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
             )
 
-            output_file_string = OUTPUT_FILE_FORMAT_STRING.format(
+            text_output_file_string = OUTPUT_FILE_FORMAT_STRING.format(
                 OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url,
+                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
                 OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
                     elapsed_time_seconds,
                 OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
@@ -174,11 +156,30 @@ if __name__ == '__main__':
                     str(url_request_result.content)
             )
 
+            csv_output_file_string = CSV_FORMAT_STRING.format(
+                timestamp,
+                url_domain,
+                elapsed_time_seconds
+            )
+
+
             print(stdout_string)
 
-            # print(output_file_string)
+            # write to text file
+            append_output_to_file(text_output_file_name, text_output_file_string)
+
+            # write to csv file
+            append_output_to_file(csv_output_file_name, csv_output_file_string)
+
 
             if loop_counter < (cli_arguments.repeat - 1):
                 sleep(cli_arguments.interval)
             
             loop_counter += 1
+
+
+
+
+####################################################################################################
+if __name__ == '__main__':
+    run()
