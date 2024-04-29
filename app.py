@@ -13,16 +13,16 @@ regex_pattern = re.compile(r'^https*://\w+\.\w+(\.\w+)*/')
 
 ####################################################################################################
 # string formatting
-OUTPUT_STRING = '{0:<10}{1:12}{2:>10}{3}{4:>10}'
-# OUTPUT_FORMAT = (':::::', {}, ':::::', ' ', {})
 OUTPUT_STRING_SEPARATOR = ':::::'
 
+# timestamp, url, elapsed_time_seconds
 STDOUT_FORMAT_STRING = (
     '\n{:<10}{:18}{:>10}{:>5}{:>10}\n'
     '{:<10}{:18}{:>10}{:>5}{:>10}\n'
     '{:<10}{:18}{:>10}{:>5}{:>10}\n'
 )
 
+# timestamp, url, elapsed time (sec), http headers, cookies, http content
 OUTPUT_FILE_FORMAT_STRING = (
     '\n{:<10}{:18}{:>10}{:>5}{:>10}\n'
     '{:<10}{:18}{:>10}{:>5}{:>10}\n'
@@ -140,36 +140,45 @@ if __name__ == '__main__':
     cli_arguments = init_argparse()
 
     for url in cli_arguments.url:
-        url_index_number = cli_arguments.url.index(url)
-        timestamp = datetime.now().strftime('%Y%m%d - %H%M%S.%f')
-        start_time_ns = perf_counter_ns()
-        url_request_result = requests.request(cli_arguments.method, url, timeout=30)
-        stop_time_ns = perf_counter_ns()
-
-        # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
-        elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns)
-
-        # print(url_index_number, url, timestamp, elapsed_time_seconds, sep='\n')
         
-        stdout_string = STDOUT_FORMAT_STRING.format(
-            OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-            OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url,
-            OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
-        )
+        loop_counter = 0
+        while loop_counter < cli_arguments.repeat:
 
-        output_file_string = OUTPUT_FILE_FORMAT_STRING.format(
-            OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-            OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url,
-            OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
-                elapsed_time_seconds,
-            OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
-                str(url_request_result.headers),
-            OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
-                str(url_request_result.cookies),
-            OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
-                str(url_request_result.content)
-        )
+            url_index_number = cli_arguments.url.index(url)
+            timestamp = datetime.now().strftime('%Y%m%d - %H%M%S.%f')
+            start_time_ns = perf_counter_ns()
+            url_request_result = requests.request(cli_arguments.method, url, timeout=30)
+            stop_time_ns = perf_counter_ns()
 
-        print(stdout_string)
+            # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
+            elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns)
 
-        print(output_file_string)
+            # print(url_index_number, url, timestamp, elapsed_time_seconds, sep='\n')
+            
+            stdout_string = STDOUT_FORMAT_STRING.format(
+                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
+                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url,
+                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
+            )
+
+            output_file_string = OUTPUT_FILE_FORMAT_STRING.format(
+                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
+                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url,
+                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
+                    elapsed_time_seconds,
+                OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
+                    str(url_request_result.headers),
+                OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
+                    str(url_request_result.cookies),
+                OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
+                    str(url_request_result.content)
+            )
+
+            print(stdout_string)
+
+            # print(output_file_string)
+
+            if loop_counter < (cli_arguments.repeat - 1):
+                sleep(cli_arguments.interval)
+            
+            loop_counter += 1
