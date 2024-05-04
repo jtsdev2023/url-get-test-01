@@ -161,10 +161,10 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
                     f'Line: {parent_frame_info.lineno} - '
                     'args_list error.\n\n'
                 )
+
             case True:
                 runtime_test_dict_type = dict_type.lower() in ['stdout', 'text', 'csv']
                 match runtime_test_dict_type:
-
                     case False:
                         sys.exit(
                             '\n\n:::::     ERROR     :::::\n'
@@ -196,7 +196,9 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
                             
                             case 'csv':
                                 csv_dict = {
-
+                                    'timestamp': timestamp,
+                                    'url_domain': url_domain,
+                                    'elapsed_time_seconds': elapsed_time_seconds
                                 }
                                 return csv_dict
 
@@ -228,41 +230,65 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
 
 
 ####################################################################################################
-def generate_format_string(string_template_type: str, **kwargs: dict) -> str:
+def generate_format_string(string_template_type: str, string_format_dict: dict) -> str:
     """Doc string"""
     
-    match string_template_type:
+    parent_frame_info = getframeinfo(currentframe())
+    
+    # asserts for debugging
+    def _author_assert_test1():
+        assert_frame_info = getframeinfo(currentframe())
+        assert string_template_type in ['stdout', 'text', 'csv'], \
+            f'\n\n\n{__name__}:: Function: {parent_frame_info.function} ' \
+            f'Line: {parent_frame_info.lineno} - ' \
+            f'Assertion Line: {assert_frame_info.lineno}.\n\n'
+    def _author_assert_test2():
+        assert_frame_info = getframeinfo(currentframe())
+        assert isinstance(string_format_dict, dict) == True, \
+            f'\n\n\n{__name__}:: Function: {parent_frame_info.function} ' \
+            f'Line: {parent_frame_info.lineno} - ' \
+            f'Assertion Line: {assert_frame_info.lineno}.\n\n'
 
-        case 'stdout':
-            timestamp, url_domain, elapsed_time_seconds = kwargs
-            stdout_tuple = (
-                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
-                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
-            )
-            return STDOUT_FORMAT_STRING.format(*stdout_tuple)
+    _author_assert_test1()
+    _author_assert_test2()
 
-        case 'text':
-            timestamp, url_domain, elapsed_time_seconds, headers, cookies, content = kwargs
-            file_tuple = (
-                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
-                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
-                    elapsed_time_seconds,
-                OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
-                    str(url_request_result.headers),
-                OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
-                    str(url_request_result.cookies),
-                OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
-                    str(url_request_result.content)
-            )
-            return OUTPUT_FILE_FORMAT_STRING.format(*file_tuple)
+    try:
+        match string_template_type:
 
-        case 'csv':
-            pass
+            case 'stdout':
+                timestamp, url_domain, elapsed_time_seconds = \
+                    [ v for v in string_format_dict.values() ]
+                stdout_tuple = (
+                    OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
+                    OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
+                    OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
+                )
+                return STDOUT_FORMAT_STRING.format(*stdout_tuple)
 
-        case _:
-            pass
+            case 'text':
+                timestamp, url_domain, elapsed_time_seconds, headers, cookies, content = kwargs
+                file_tuple = (
+                    OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
+                    OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
+                    OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
+                        elapsed_time_seconds,
+                    OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
+                        str(url_request_result.headers),
+                    OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
+                        str(url_request_result.cookies),
+                    OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
+                        str(url_request_result.content)
+                )
+                return OUTPUT_FILE_FORMAT_STRING.format(*file_tuple)
+
+            case 'csv':
+                pass
+
+            case _:
+                pass
+
+    except Exception as error:
+        sys.exit(error)
 
 
 ####################################################################################################
@@ -299,28 +325,21 @@ def run() -> int:
             string_format_args = [timestamp, url_domain, elapsed_time_seconds, url_request_result]
                 # stdout dict            
             stdout_dict = generate_output_dict('stdout', string_format_args)
-            #     # text file dict
+                # text file dict
             text_dict = generate_output_dict('text', string_format_args)
-            #     # csv file dict - timestamp, url_domain, elapsed_time_seconds
+                # csv file dict - timestamp, url_domain, elapsed_time_seconds
             csv_dict = generate_output_dict('csv', string_format_args)
 
 
             # # write to stdout
-            # stdout_str = generate_format_string('stdout_string', stdout_dict)
+            stdout_str = generate_format_string('stdout', stdout_dict)
 
             # # write to file
             # file_out_str = generate_format_string('output_file_string', output_file_dict)
 
-            
-            # # csv_output_file_string = CSV_FORMAT_STRING.format(
-            # #     timestamp,
-            # #     url_domain,
-            # #     elapsed_time_seconds
-            # # )
-
 
             # # print(stdout_string)
-            # print(stdout_str)
+            print(stdout_str)
 
             # # write to text file
             # # append_output_to_file(text_output_file_name, text_output_file_string)
