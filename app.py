@@ -120,9 +120,68 @@ def calculate_elapsed_time(
 
 
 ####################################################################################################
-def generate_format_string(string_template: str, format_tuple: tuple) -> str:
-    return string_template.format(*format_tuple)
+def generate_output_dict(dict_type: str, *args) -> dict:
+    """Doc string"""
+    timestamp, url_domain, elapsed_time_seconds, requests_object = args
 
+    match dict_type:
+
+        case output_stdout:
+            stdout_dict = {
+                    'timestamp':timestamp,
+                    'url_domain':url_domain,
+                    'elapsed_time_seconds':elapsed_time_seconds
+                }
+            return stdout_dict
+    
+        case output_file:
+            output_file_dict = {
+                **stdout_dict,
+                'headers': requests_object.headers,
+                'cookies': requests_object.cookies,
+                'content': requests_object.content
+            }
+            return output_file_dict
+        
+        case _:
+            pass
+
+
+
+
+####################################################################################################
+def generate_format_string(string_template_type: str, **kwargs: dict) -> str:
+    """Doc string"""
+    
+    match string_template_type:
+
+        case output_stdout:
+            timestamp, url_domain, elapsed_time_seconds = kwargs
+            stdout_tuple = (
+                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
+                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
+                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
+            )
+            return STDOUT_FORMAT_STRING.format(*stdout_tuple)
+
+        case output_file:
+            timestamp, url_domain, elapsed_time_seconds, headers, cookies, content = kwargs
+            file_tuple = (
+                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
+                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
+                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
+                    elapsed_time_seconds,
+                OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
+                    str(url_request_result.headers),
+                OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
+                    str(url_request_result.cookies),
+                OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
+                    str(url_request_result.content)
+            )
+            return OUTPUT_FILE_FORMAT_STRING.format(*file_tuple)
+
+        case _:
+            pass
 
 
 ####################################################################################################
@@ -155,30 +214,18 @@ def run() -> int:
             # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
             elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns, TIME_DIVISOR)
 
+            # get string format dicts
+            # stdout
+            string_format_args = [timestamp, url_domain, elapsed_time_seconds, url_request_result]
+            stdout_dict = generate_output_dict('output_stdout', string_format_args)
+            # output file
+            output_file_dict = generate_format_string('output_file', string_format_args)
 
-            x = (
-                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
-                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
-            )
+            # write to stdout
+            stdout_str = generate_format_string('stdout_string', stdout_dict)
 
-            stdout_s = generate_format_string(STDOUT_FORMAT_STRING, x)
-
-
-            y = (
-                OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
-                OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
-                OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
-                    elapsed_time_seconds,
-                OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
-                    str(url_request_result.headers),
-                OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
-                    str(url_request_result.cookies),
-                OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
-                    str(url_request_result.content)
-            )
-
-            file_out_s = generate_format_string(OUTPUT_FILE_FORMAT_STRING, y)
+            # write to file
+            file_out_str = generate_format_string('output_file_string', output_file_dict)
 
             
             csv_output_file_string = CSV_FORMAT_STRING.format(
@@ -189,11 +236,11 @@ def run() -> int:
 
 
             # print(stdout_string)
-            print(stdout_s)
+            print(stdout_str)
 
             # write to text file
             # append_output_to_file(text_output_file_name, text_output_file_string)
-            append_output_to_file(text_output_file_name, file_out_s)
+            append_output_to_file(text_output_file_name, file_out_str)
 
             # write to csv file
             append_output_to_file(csv_output_file_name, csv_output_file_string)
