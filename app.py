@@ -1,5 +1,6 @@
 import re
 import sys
+import yaml
 import argparse
 import requests
 from datetime import datetime
@@ -304,18 +305,18 @@ def generate_format_string(string_template_type: str, string_format_dict: dict) 
 
             case 'text':
                 timestamp, url_domain, elapsed_time_seconds, headers, cookies, content = \
-                    [ v for v in string_format_dict.values() ]
+                    [ str(v) for v in string_format_dict.values() ]
                 text_tuple = (
                     OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
                     OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
                     OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
                         elapsed_time_seconds,
                     OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
-                        str(headers),
+                        headers,
                     OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
-                        str(cookies),
+                        cookies,
                     OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
-                        str(content)
+                        content
                 )
                 return OUTPUT_FILE_FORMAT_STRING.format(*text_tuple)
 
@@ -329,7 +330,7 @@ def generate_format_string(string_template_type: str, string_format_dict: dict) 
                     '\n\n:::::     ERROR     :::::\n'
                     f'{__name__}:: Function: {parent_frame_info.function} '
                     f'Line: {parent_frame_info.lineno} - ' 
-                    f'dict_type match case failure.'
+                    'dict_type match case failure.'
                 )
 
     except Exception as error:
@@ -342,12 +343,77 @@ def generate_format_string(string_template_type: str, string_format_dict: dict) 
 
 
 ####################################################################################################
-def read_url_file(file_type: str, file_name: str) -> list[str]:
+class UrlReadFile:
     """Doc string"""
-    with open(file_name, 'r') as f:
-        _url_list = f.readlines()
     
-    return [ url.strip() for url in _url_list ]
+    def __init__(self, input_file_name):
+        self.input_file_name = input_file_name
+        self.parent_frame_info = getframeinfo(currentframe())
+
+    def read_file_text(self) -> list[str]:
+        """Doc string"""
+        with open(self.input_file_name, 'r') as f:
+            _url_list = f.readlines()
+        
+        return [ url.strip() for url in _url_list ]
+    
+    def read_file_yaml(self) -> str:
+        """Doc string"""
+        with open(self.input_file_name, 'r') as f:
+            _yaml_string = f.read()
+
+        return _yaml_string
+
+    def read_file_csv(self) -> str:
+        """Doc string"""
+        with open(self.input_file_name, 'r') as f:
+            _csv_string = f.read()
+
+        return _csv_string
+
+    def create_yaml_object(self):
+        """Doc string"""
+        yaml_string = self.read_file_yaml(self.input_file_name)
+        # need yaml list[str]
+        # may need to validate yaml string/object
+        _yaml_list = yaml.safe_load(yaml_string)
+
+        return _yaml_list_object
+    
+    def create_csv_object(self):
+        """Doc string"""
+        csv_string = self.read_file_csv(self.input_file_name)
+        # a comma "," is a safe URL character
+        # so this will need work to make it robust
+        _csv_list = [ url.strip() for url in csv_string.split(',') ]
+
+        return _csv_list_object
+
+    def create_url_list(self):
+        """Doc string"""
+        # parse file name to determine file type - text, csv, yaml
+        _file_extension = self.input_file_name.split('.')[-1]
+
+        match _file_extension:
+
+            case 'txt' | 'text':
+                _text_list = self.read_file_text()
+                return _text_list
+            
+            case 'yml' | 'yaml':
+                _yaml_list = self.create_yaml_object()
+                return _yaml_list
+
+            case 'csv':
+                _csv_list = self.create_csv_object()
+                return _csv_list
+            
+            case _:
+                sys.exit(
+                    '\n\n:::::     ERROR     :::::\n'
+                    f'{__name__}:: Function: {self.parent_frame_info.function} '
+                    f'Line: {self.parent_frame_info.lineno}\n\n'
+                )
 
 
 
@@ -359,7 +425,8 @@ def run() -> int:
     cli_arguments = init_argparse()
 
     if cli_arguments.file:
-        url_list = read_url_file('test', cli_arguments.file)
+        read_url_file = UrlReadFile(cli_arguments.file)
+        url_list = read_url_file.create_url_list()
 
     else:
         url_list = cli_arguments.url
@@ -394,7 +461,7 @@ def run() -> int:
             stdout_dict = generate_output_dict('stdout', string_format_args)
                 # text file dict
             text_dict = generate_output_dict('text', string_format_args)
-                # csv file dict - timestamp, url_domain, elapsed_time_seconds
+                # csv file dict
             csv_dict = generate_output_dict('csv', string_format_args)
 
 
