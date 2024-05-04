@@ -151,37 +151,65 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
         timestamp, url_domain, elapsed_time_seconds, url_requests_result = args_list
         test = list( zip( args_list, [str, str, float, requests.models.Response] ) )
 
-        if all( [isinstance(x, y) for x, y in test] ) == True:
-            if dict_type.lower() in ['stdout', 'text', 'csv']:
+        runtime_test_args_list = all( [isinstance(x, y) for x, y in test] )
+        match runtime_test_args_list:
+            
+            case False:
+                sys.exit(
+                    '\n\n:::::     ERROR     :::::\n'
+                    f'{__name__}:: Function: {parent_frame_info.function} '
+                    f'Line: {parent_frame_info.lineno} - '
+                    'args_list error.\n\n'
+                )
+            case True:
+                runtime_test_dict_type = dict_type.lower() in ['stdout', 'text', 'csv']
+                match runtime_test_dict_type:
 
-                match dict_type:
-                    case 'stdout':
-                        stdout_dict = {
-                                'timestamp': timestamp,
-                                'url_domain': url_domain,
-                                'elapsed_time_seconds': elapsed_time_seconds
-                            }
-                        return stdout_dict
-                
-                    case 'text':
-                        text_dict = {
-                            **stdout_dict,
-                            'headers': requests_object.headers,
-                            'cookies': requests_object.cookies,
-                            'content': requests_object.content
-                        }
-                        return output_file_dict
-                    
-                    case 'csv':
-                        csv_dict = {
-
-                        }
-
-                    case _:
-                        raise RuntimeError(
-                            ':::::     ERROR     :::::\n'
-                            f'Error in function "generate_output_dict()" - match case failure.'
+                    case False:
+                        sys.exit(
+                            '\n\n:::::     ERROR     :::::\n'
+                            f'{__name__}:: Function: {parent_frame_info.function} '
+                            f'Line: {parent_frame_info.lineno} - '
+                            'dict_type error.\n\n'
                         )
+
+                    case True:
+                        match dict_type:
+                            case 'stdout':
+                                stdout_dict = {
+                                        'timestamp': timestamp,
+                                        'url_domain': url_domain,
+                                        'elapsed_time_seconds': elapsed_time_seconds
+                                    }
+                                return stdout_dict
+                        
+                            case 'text':
+                                text_dict = {
+                                    **stdout_dict,
+                                    'headers': requests_object.headers,
+                                    'cookies': requests_object.cookies,
+                                    'content': requests_object.content
+                                }
+                                return output_file_dict
+                            
+                            case 'csv':
+                                csv_dict = {
+
+                                }
+
+                            case _:
+                                sys.exit(
+                                    '\n\n:::::     ERROR     :::::\n'
+                                    f'{__name__}:: Function: {parent_frame_info.function} '
+                                    f'Line: {parent_frame_info.lineno} - ' 
+                                    f'dict_type match case failure.'
+                                )
+            case _:
+                sys.exit(
+                    '\n\n:::::     ERROR     :::::\n'
+                    f'{__name__}:: Function: {parent_frame_info.function} '
+                    f'Line: {parent_frame_info.lineno} - '
+                )
 
     except Exception as error:
         print(
@@ -268,7 +296,7 @@ def run() -> int:
             # get string format dicts - passed to generate_format_string()
             string_format_args = [timestamp, url_domain, elapsed_time_seconds, url_request_result]
                 # stdout dict            
-            stdout_dict = generate_output_dict('stdout', string_format_args)
+            stdout_dict = generate_output_dict('dog', string_format_args)
                 # output file dict
             # text_dict = generate_format_string('text', string_format_args)
                 # csv file dict - timestamp, url_domain, elapsed_time_seconds
