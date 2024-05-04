@@ -173,3 +173,7 @@ cython_debug/
 
 # ingore .pdf files
 *.pdf
+
+# ignore .yaml files
+*.yaml
+*.yml
