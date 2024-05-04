@@ -1,8 +1,10 @@
 import re
+import sys
 import argparse
 import requests
 from datetime import datetime
 from time import sleep, perf_counter_ns
+from inspect import currentframe, getframeinfo
 
 
 
@@ -122,10 +124,28 @@ def calculate_elapsed_time(
 ####################################################################################################
 def generate_output_dict(dict_type: str, args_list: list) -> dict:
     """Doc string"""
-    
+    parent_frame_info = getframeinfo(currentframe())
+
     # expect args_list = [timestamp, url_domain, elapsed_time_seconds, url_requests_result]
         # CAUTION: basic checks... may need expanding
     
+    # asserts for debugging
+    def _author_assert_test1():
+        assert_frame_info = getframeinfo(currentframe())
+        assert dict_type in ['stdout', 'text', 'csv'], \
+            f'\n\n\n{__name__}:: Function: {parent_frame_info.function} ' \
+            f'Line: {parent_frame_info.lineno} - ' \
+            f'Assertion Line: {assert_frame_info.lineno}.\n\n'
+    def _author_assert_test2():
+        assert_frame_info = getframeinfo(currentframe())
+        assert list[zip(args_list, [str, str, int, requests.models.Response] )] == True, \
+            f'\n\n\n{__name__}:: Function: {parent_frame_info.function} ' \
+            f'Line: {parent_frame_info.lineno} - ' \
+            f'Assertion Line: {assert_frame_info.lineno}.\n\n'
+
+    _author_assert_test1()
+    _author_assert_test2()
+
     try:
         timestamp, url_domain, elapsed_time_seconds, url_requests_result = args_list
         test_01 = list[zip(args_list, [str, str, int, requests.models.Response] )]
@@ -164,12 +184,15 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
 
     except Exception as error:
         print(
-            ':::::     ERROR     :::::\n'
-            'Error with "generate_output_dict()".\n'
-            'Expected: "dict_type" is one of stdout:str, text:str, or csv:str.\n'
-            'Expected: args_list = '
-            '[timestamp, url_domain, elapsed_time_seconds, url_requests_result].\n'
-        )    
+            '\n\n:::::     ERROR     :::::\n'
+            f'\n{__name__}:: Function: {parent_frame_info.function} '
+            f'Line: {parent_frame_info.lineno}\n\n'
+            'Ensure: "dict_type" is one of stdout:str, text:str, or csv:str.\n'
+            'Ensure: args_list = '
+            '[timestamp:str, url_domain:str, elapsed_time_seconds:int, '
+            'url_requests_result:requests.models.Response].\n\n'
+        )
+        sys.exit()
 
 
 
@@ -247,34 +270,34 @@ def run() -> int:
                 # stdout dict            
             stdout_dict = generate_output_dict('stdout', string_format_args)
                 # output file dict
-            text_dict = generate_format_string('text', string_format_args)
+            # text_dict = generate_format_string('text', string_format_args)
                 # csv file dict - timestamp, url_domain, elapsed_time_seconds
             csv_dict = generate_output_dict('csv', string_format_args)
 
 
-            # write to stdout
-            stdout_str = generate_format_string('stdout_string', stdout_dict)
+            # # write to stdout
+            # stdout_str = generate_format_string('stdout_string', stdout_dict)
 
-            # write to file
-            file_out_str = generate_format_string('output_file_string', output_file_dict)
+            # # write to file
+            # file_out_str = generate_format_string('output_file_string', output_file_dict)
 
             
-            # csv_output_file_string = CSV_FORMAT_STRING.format(
-            #     timestamp,
-            #     url_domain,
-            #     elapsed_time_seconds
-            # )
+            # # csv_output_file_string = CSV_FORMAT_STRING.format(
+            # #     timestamp,
+            # #     url_domain,
+            # #     elapsed_time_seconds
+            # # )
 
 
-            # print(stdout_string)
-            print(stdout_str)
+            # # print(stdout_string)
+            # print(stdout_str)
 
-            # write to text file
-            # append_output_to_file(text_output_file_name, text_output_file_string)
-            append_output_to_file(text_output_file_name, file_out_str)
+            # # write to text file
+            # # append_output_to_file(text_output_file_name, text_output_file_string)
+            # append_output_to_file(text_output_file_name, file_out_str)
 
-            # write to csv file
-            append_output_to_file(csv_output_file_name, csv_output_file_string)
+            # # write to csv file
+            # append_output_to_file(csv_output_file_name, csv_output_file_string)
 
 
             if loop_counter < (cli_arguments.repeat - 1):
