@@ -43,11 +43,24 @@ TIME_DIVISOR = 1e9
 TIMESTAMP_STR_FORMAT = '%Y%m%d - %H%M%S.%f'
 
 
+
+####################################################################################################
+def verify_input_file(input_string: str) -> str:
+    """Doc string"""
+    input_file_pattern = re.compile(r'^[\w\W]+\.(txt|text|csv|yaml|yml)$')
+    if input_file_pattern.match(input_string):
+        return True
+    else:
+        return False
+
+
+
 ####################################################################################################
 def init_argparse() -> None:
     """Doc string"""
     parser = argparse.ArgumentParser()
     url_read_exclusion = parser.add_mutually_exclusive_group(required=True)
+    url_file_version_group = parser.add_argument_group()
 
     # don't allow -u/--url and -f/--file at same time
     url_read_exclusion.add_argument(
@@ -61,6 +74,7 @@ def init_argparse() -> None:
             'Read URL from file. '
             'Cannot be used in conjunction with -u/--hrl argument.'
     )
+
 
     parser.add_argument(
         '-i', '--interval', required=False, type=int, default=1,
@@ -87,9 +101,23 @@ def init_argparse() -> None:
     parser.add_argument('-s', '--suppress', required=False, action='store_true',
         help='Suppress writing output to file.'
     )
+
     args = parser.parse_args()
 
-    return args
+    if args.file:
+
+        if verify_input_file(args.file) == True:
+            return args
+
+        else:
+            sys.exit('\n\n:::::     ERROR     :::::\n\n'
+                f'Invalid CLI argument -f/--file "{args.file}".\n\n'
+                'Must be one of ".(txt|text)", ".csv", or ".(yaml|yml)".\n'
+                'Example: "file.txt", "file.csv", or "file.yaml".\n\n'
+            )
+    
+    else:
+        return args
 
 
 
@@ -314,7 +342,7 @@ def generate_format_string(string_template_type: str, string_format_dict: dict) 
 
 
 ####################################################################################################
-def read_url_file_text(file_name: str) -> list[str]:
+def read_url_file(file_type: str, file_name: str) -> list[str]:
     """Doc string"""
     with open(file_name, 'r') as f:
         _url_list = f.readlines()
@@ -330,16 +358,19 @@ def run() -> int:
 
     cli_arguments = init_argparse()
 
-    if cli_arguments.file == True:
-        url_list = read_url_file_text()
+    if cli_arguments.file:
+        url_list = read_url_file('test', cli_arguments.file)
+
+    else:
+        url_list = cli_arguments.url
 
 
-    for _url in cli_arguments.url:
+    for _url in url_list:
 
         loop_counter = 0
         while loop_counter < cli_arguments.repeat:
 
-            url_index_number = cli_arguments.url.index(_url)
+            url_index_number = url_list.index(_url)
             url_domain = get_url_domain(_url)
 
             # file extension (.txt or .csv etc.) set here

@@ -166,6 +166,7 @@ cython_debug/
 
 # ignore .txt files
 *.txt
+*.text
 
 # ignore .csv files
 *.csv
