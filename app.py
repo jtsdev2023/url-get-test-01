@@ -138,7 +138,8 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
             f'Assertion Line: {assert_frame_info.lineno}.\n\n'
     def _author_assert_test2():
         assert_frame_info = getframeinfo(currentframe())
-        assert list[zip(args_list, [str, str, int, requests.models.Response] )] == True, \
+        _l = list( zip( args_list, [str, str, float, requests.models.Response] ) )
+        assert all(_l) == True, \
             f'\n\n\n{__name__}:: Function: {parent_frame_info.function} ' \
             f'Line: {parent_frame_info.lineno} - ' \
             f'Assertion Line: {assert_frame_info.lineno}.\n\n'
@@ -148,7 +149,7 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
 
     try:
         timestamp, url_domain, elapsed_time_seconds, url_requests_result = args_list
-        test_01 = list[zip(args_list, [str, str, int, requests.models.Response] )]
+        test = list( zip( args_list, [str, str, float, requests.models.Response] ) )
 
         if all( [isinstance(x, y) for x, y in test] ) == True:
             if dict_type.lower() in ['stdout', 'text', 'csv']:
@@ -263,7 +264,6 @@ def run() -> int:
 
             # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
             elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns, TIME_DIVISOR)
-
 
             # get string format dicts - passed to generate_format_string()
             string_format_args = [timestamp, url_domain, elapsed_time_seconds, url_request_result]
