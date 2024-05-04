@@ -84,7 +84,7 @@ def init_argparse() -> None:
 
 
 ####################################################################################################
-def strip_url_domain(target_url: str) -> str:
+def get_url_domain(target_url: str) -> str:
     """Doc string"""
     url_domain = target_url.split('/')[2]
 
@@ -111,10 +111,17 @@ def append_output_to_file(
         f.write(output_string)
 
 
+
 ####################################################################################################
 def calculate_elapsed_time(
         start_time_ns: int, stop_time_ns: int, time_divisor: int) -> int:
     return (stop_time_ns - start_time_ns) / time_divisor
+
+
+
+####################################################################################################
+def generate_format_string(string_template: str, format_tuple: tuple) -> str:
+    return string_template.format(*format_tuple)
 
 
 
@@ -131,7 +138,7 @@ def run() -> int:
         while loop_counter < cli_arguments.repeat:
 
             url_index_number = cli_arguments.url.index(_url)
-            url_domain = strip_url_domain(_url)
+            url_domain = get_url_domain(_url)
 
             # file extension (.txt or .csv etc.) set here
             # NOTE: maybe create a class w/ methods that create specific file type?
@@ -148,13 +155,17 @@ def run() -> int:
             # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
             elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns, TIME_DIVISOR)
 
-            stdout_string = STDOUT_FORMAT_STRING.format(
+
+            x = (
                 OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
                 OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
                 OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ', elapsed_time_seconds
             )
 
-            text_output_file_string = OUTPUT_FILE_FORMAT_STRING.format(
+            stdout_s = generate_format_string(STDOUT_FORMAT_STRING, x)
+
+
+            y = (
                 OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
                 OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
                 OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
@@ -167,6 +178,9 @@ def run() -> int:
                     str(url_request_result.content)
             )
 
+            file_out_s = generate_format_string(OUTPUT_FILE_FORMAT_STRING, y)
+
+            
             csv_output_file_string = CSV_FORMAT_STRING.format(
                 timestamp,
                 url_domain,
@@ -174,10 +188,12 @@ def run() -> int:
             )
 
 
-            print(stdout_string)
+            # print(stdout_string)
+            print(stdout_s)
 
             # write to text file
-            append_output_to_file(text_output_file_name, text_output_file_string)
+            # append_output_to_file(text_output_file_name, text_output_file_string)
+            append_output_to_file(text_output_file_name, file_out_s)
 
             # write to csv file
             append_output_to_file(csv_output_file_name, csv_output_file_string)
