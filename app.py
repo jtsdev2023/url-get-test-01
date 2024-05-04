@@ -47,10 +47,21 @@ TIMESTAMP_STR_FORMAT = '%Y%m%d - %H%M%S.%f'
 def init_argparse() -> None:
     """Doc string"""
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-u', '--url', nargs='+', required=True, type=str,
-        help='Target URL. Multiple URLs allowed.'
+    url_read_exclusion = parser.add_mutually_exclusive_group(required=True)
+
+    # don't allow -u/--url and -f/--file at same time
+    url_read_exclusion.add_argument(
+        '-u', '--url', nargs='+', required=False, type=str,
+        help= \
+            'Target URL. Multiple URLs allowed. '
+            'Cannot be used in conjunction with -f/--file argument.'
     )
+    url_read_exclusion.add_argument('-f', '--file', required=False, type=str,
+        help= \
+            'Read URL from file. '
+            'Cannot be used in conjunction with -u/--hrl argument.'
+    )
+
     parser.add_argument(
         '-i', '--interval', required=False, type=int, default=1,
         help='URL polling internal.'
@@ -72,9 +83,6 @@ def init_argparse() -> None:
         help= \
             'Utilize ThreadPoolExecutor for concurrency. '
             'Will not write URL output to STDOUT.'
-    )
-    parser.add_argument('-f', '--file', required=False, type=str,
-        help='Read URL from file.'
     )
     parser.add_argument('-s', '--suppress', required=False, action='store_true',
         help='Suppress writing output to file.'
@@ -304,12 +312,27 @@ def generate_format_string(string_template_type: str, string_format_dict: dict) 
         )
 
 
+
+####################################################################################################
+def read_url_file_text(file_name: str) -> list[str]:
+    """Doc string"""
+    with open(file_name, 'r') as f:
+        _url_list = f.readlines()
+    
+    return [ url.strip() for url in _url_list ]
+
+
+
 ####################################################################################################
 def run() -> int:
     """Doc string"""
     requests.urllib3.disable_warnings()
 
     cli_arguments = init_argparse()
+
+    if cli_arguments.file == True:
+        url_list = read_url_file_text()
+
 
     for _url in cli_arguments.url:
 
