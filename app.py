@@ -120,32 +120,46 @@ def calculate_elapsed_time(
 
 
 ####################################################################################################
-def generate_output_dict(dict_type: str, *args) -> dict:
+def generate_output_dict(dict_type: str, args_list: list) -> dict:
     """Doc string"""
-    timestamp, url_domain, elapsed_time_seconds, requests_object = args
-
-    match dict_type:
-
-        case output_stdout:
-            stdout_dict = {
-                    'timestamp':timestamp,
-                    'url_domain':url_domain,
-                    'elapsed_time_seconds':elapsed_time_seconds
-                }
-            return stdout_dict
     
-        case output_file:
-            output_file_dict = {
-                **stdout_dict,
-                'headers': requests_object.headers,
-                'cookies': requests_object.cookies,
-                'content': requests_object.content
-            }
-            return output_file_dict
-        
-        case _:
-            pass
+    # expect args_list = [timestamp, url_domain, elapsed_time_seconds, url_requests_result]
+        # WARNING: basic checks... needs expanding
+    try:
+        timestamp, url_domain, elapsed_time_seconds, url_requests_result = args_list
+    
+        match dict_type:
 
+            case 'stdout':
+                stdout_dict = {
+                        'timestamp': timestamp,
+                        'url_domain': url_domain,
+                        'elapsed_time_seconds': elapsed_time_seconds
+                    }
+                return stdout_dict
+        
+            case 'text':
+                text_dict = {
+                    **stdout_dict,
+                    'headers': requests_object.headers,
+                    'cookies': requests_object.cookies,
+                    'content': requests_object.content
+                }
+                return output_file_dict
+            
+            case 'csv':
+                csv_dict = {
+
+                }
+
+            case _:
+                pass
+
+    except Exception as error:
+        raise error(
+            "Input 'args_list' is of incorrect length. "
+            "Expected: [timestamp, url_domain, elapsed_time_seconds, url_requests_result]"
+        )
 
 
 
@@ -155,7 +169,7 @@ def generate_format_string(string_template_type: str, **kwargs: dict) -> str:
     
     match string_template_type:
 
-        case output_stdout:
+        case 'stdout':
             timestamp, url_domain, elapsed_time_seconds = kwargs
             stdout_tuple = (
                 OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
@@ -164,7 +178,7 @@ def generate_format_string(string_template_type: str, **kwargs: dict) -> str:
             )
             return STDOUT_FORMAT_STRING.format(*stdout_tuple)
 
-        case output_file:
+        case 'text':
             timestamp, url_domain, elapsed_time_seconds, headers, cookies, content = kwargs
             file_tuple = (
                 OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
@@ -179,6 +193,9 @@ def generate_format_string(string_template_type: str, **kwargs: dict) -> str:
                     str(url_request_result.content)
             )
             return OUTPUT_FILE_FORMAT_STRING.format(*file_tuple)
+
+        case 'csv':
+            pass
 
         case _:
             pass
@@ -214,12 +231,16 @@ def run() -> int:
             # subtract nanosecond start from stop and divide by 1 billion to convert to seconds
             elapsed_time_seconds = calculate_elapsed_time(start_time_ns, stop_time_ns, TIME_DIVISOR)
 
-            # get string format dicts
-            # stdout
+
+            # get string format dicts - passed to generate_format_string()
             string_format_args = [timestamp, url_domain, elapsed_time_seconds, url_request_result]
-            stdout_dict = generate_output_dict('output_stdout', string_format_args)
-            # output file
-            output_file_dict = generate_format_string('output_file', string_format_args)
+                # stdout dict            
+            stdout_dict = generate_output_dict('stdout', string_format_args)
+                # output file dict
+            text_dict = generate_format_string('text', string_format_args)
+                # csv file dict - timestamp, url_domain, elapsed_time_seconds
+            csv_dict = generate_output_dict('csv', string_format_args)
+
 
             # write to stdout
             stdout_str = generate_format_string('stdout_string', stdout_dict)
@@ -228,11 +249,11 @@ def run() -> int:
             file_out_str = generate_format_string('output_file_string', output_file_dict)
 
             
-            csv_output_file_string = CSV_FORMAT_STRING.format(
-                timestamp,
-                url_domain,
-                elapsed_time_seconds
-            )
+            # csv_output_file_string = CSV_FORMAT_STRING.format(
+            #     timestamp,
+            #     url_domain,
+            #     elapsed_time_seconds
+            # )
 
 
             # print(stdout_string)
