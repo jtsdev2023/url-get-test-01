@@ -124,42 +124,52 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
     """Doc string"""
     
     # expect args_list = [timestamp, url_domain, elapsed_time_seconds, url_requests_result]
-        # WARNING: basic checks... needs expanding
+        # CAUTION: basic checks... may need expanding
+    
     try:
         timestamp, url_domain, elapsed_time_seconds, url_requests_result = args_list
-    
-        match dict_type:
+        test_01 = list[zip(args_list, [str, str, int, requests.models.Response] )]
 
-            case 'stdout':
-                stdout_dict = {
-                        'timestamp': timestamp,
-                        'url_domain': url_domain,
-                        'elapsed_time_seconds': elapsed_time_seconds
-                    }
-                return stdout_dict
-        
-            case 'text':
-                text_dict = {
-                    **stdout_dict,
-                    'headers': requests_object.headers,
-                    'cookies': requests_object.cookies,
-                    'content': requests_object.content
-                }
-                return output_file_dict
-            
-            case 'csv':
-                csv_dict = {
+        if all( [isinstance(x, y) for x, y in test] ) == True:
+            if dict_type.lower() in ['stdout', 'text', 'csv']:
 
-                }
+                match dict_type:
+                    case 'stdout':
+                        stdout_dict = {
+                                'timestamp': timestamp,
+                                'url_domain': url_domain,
+                                'elapsed_time_seconds': elapsed_time_seconds
+                            }
+                        return stdout_dict
+                
+                    case 'text':
+                        text_dict = {
+                            **stdout_dict,
+                            'headers': requests_object.headers,
+                            'cookies': requests_object.cookies,
+                            'content': requests_object.content
+                        }
+                        return output_file_dict
+                    
+                    case 'csv':
+                        csv_dict = {
 
-            case _:
-                pass
+                        }
+
+                    case _:
+                        raise RuntimeError(
+                            ':::::     ERROR     :::::\n'
+                            f'Error in function "generate_output_dict()" - match case failure.'
+                        )
 
     except Exception as error:
-        raise error(
-            "Input 'args_list' is of incorrect length. "
-            "Expected: [timestamp, url_domain, elapsed_time_seconds, url_requests_result]"
-        )
+        print(
+            ':::::     ERROR     :::::\n'
+            'Error with "generate_output_dict()".\n'
+            'Expected: "dict_type" is one of stdout:str, text:str, or csv:str.\n'
+            'Expected: args_list = '
+            '[timestamp, url_domain, elapsed_time_seconds, url_requests_result].\n'
+        )    
 
 
 
