@@ -47,25 +47,36 @@ def init_argparse() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-u', '--url', nargs='+', required=True, type=str,
-        help='Target URL. Multiple URLs allowed.')
+        help='Target URL. Multiple URLs allowed.'
+    )
     parser.add_argument(
         '-i', '--interval', required=False, type=int, default=1,
-        help='URL polling internal.')
+        help='URL polling internal.'
+    )
     parser.add_argument(
         '-r', '--repeat', required=False, type=int, default=1,
-        help='Number of times to poll URL.')
+        help='Number of times to poll URL.'
+    )
     parser.add_argument(
         '-m', '--method', required=False, type=str.upper, default='GET',
-        choices=['GET', 'PUT', 'POST'], help='HTTP method.')
+        choices=['GET'], help='HTTP method.'
+    )
     parser.add_argument(
         '-t', '--timeout', required=False, type=int, default=30,
-        help='HTTP request timeout in seconds.')
-    parser.add_argument(
-        '-p', '--performance', required=False, type=bool, default=False,
-        help=('Run app without printing to stdout. '
-              'Will utilize concurrency to increase performance.')
+        help='HTTP request timeout in seconds.'
     )
-
+    parser.add_argument(
+        '-c', '--concurrency', required=False, action='store_true',
+        help= \
+            'Utilize ThreadPoolExecutor for concurrency. '
+            'Will not write URL output to STDOUT.'
+    )
+    parser.add_argument('-f', '--file', required=False, type=str,
+        help='Read URL from file.'
+    )
+    parser.add_argument('-s', '--suppress', required=False, action='store_true',
+        help='Suppress writing output to file.'
+    )
     args = parser.parse_args()
 
     return args
