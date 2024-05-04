@@ -185,17 +185,20 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
                         
                             case 'text':
                                 text_dict = {
-                                    **stdout_dict,
-                                    'headers': requests_object.headers,
-                                    'cookies': requests_object.cookies,
-                                    'content': requests_object.content
+                                    'timestamp': timestamp,
+                                    'url_domain': url_domain,
+                                    'elapsed_time_seconds': elapsed_time_seconds,
+                                    'headers': url_requests_result.headers,
+                                    'cookies': url_requests_result.cookies,
+                                    'content': url_requests_result.content
                                 }
-                                return output_file_dict
+                                return text_dict
                             
                             case 'csv':
                                 csv_dict = {
 
                                 }
+                                return csv_dict
 
                             case _:
                                 sys.exit(
@@ -212,7 +215,7 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
                 )
 
     except Exception as error:
-        print(
+        sys.exit(
             '\n\n:::::     ERROR     :::::\n'
             f'\n{__name__}:: Function: {parent_frame_info.function} '
             f'Line: {parent_frame_info.lineno}\n\n'
@@ -221,7 +224,6 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
             '[timestamp:str, url_domain:str, elapsed_time_seconds:int, '
             'url_requests_result:requests.models.Response].\n\n'
         )
-        sys.exit()
 
 
 
@@ -296,10 +298,10 @@ def run() -> int:
             # get string format dicts - passed to generate_format_string()
             string_format_args = [timestamp, url_domain, elapsed_time_seconds, url_request_result]
                 # stdout dict            
-            stdout_dict = generate_output_dict('dog', string_format_args)
-                # output file dict
-            # text_dict = generate_format_string('text', string_format_args)
-                # csv file dict - timestamp, url_domain, elapsed_time_seconds
+            stdout_dict = generate_output_dict('stdout', string_format_args)
+            #     # text file dict
+            text_dict = generate_output_dict('text', string_format_args)
+            #     # csv file dict - timestamp, url_domain, elapsed_time_seconds
             csv_dict = generate_output_dict('csv', string_format_args)
 
 
