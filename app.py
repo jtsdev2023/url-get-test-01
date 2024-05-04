@@ -194,6 +194,7 @@ def generate_output_dict(dict_type: str, args_list: list) -> dict:
                                 }
                                 return text_dict
                             
+                            # csv is same as stdout... look to optimize
                             case 'csv':
                                 csv_dict = {
                                     'timestamp': timestamp,
@@ -266,29 +267,41 @@ def generate_format_string(string_template_type: str, string_format_dict: dict) 
                 return STDOUT_FORMAT_STRING.format(*stdout_tuple)
 
             case 'text':
-                timestamp, url_domain, elapsed_time_seconds, headers, cookies, content = kwargs
-                file_tuple = (
+                timestamp, url_domain, elapsed_time_seconds, headers, cookies, content = \
+                    [ v for v in string_format_dict.values() ]
+                text_tuple = (
                     OUTPUT_STRING_SEPARATOR, 'TIMESTAMP', OUTPUT_STRING_SEPARATOR, ' ', timestamp,
                     OUTPUT_STRING_SEPARATOR, 'URL', OUTPUT_STRING_SEPARATOR, ' ', url_domain,
                     OUTPUT_STRING_SEPARATOR, 'ELAPSED TIME (sec)', OUTPUT_STRING_SEPARATOR, ' ',
                         elapsed_time_seconds,
                     OUTPUT_STRING_SEPARATOR, 'HTTP HEADERS', OUTPUT_STRING_SEPARATOR, ' ',
-                        str(url_request_result.headers),
+                        str(headers),
                     OUTPUT_STRING_SEPARATOR, 'COOKIES', OUTPUT_STRING_SEPARATOR, ' ',
-                        str(url_request_result.cookies),
+                        str(cookies),
                     OUTPUT_STRING_SEPARATOR, 'HTML CONTENT', OUTPUT_STRING_SEPARATOR, ' ',
-                        str(url_request_result.content)
+                        str(content)
                 )
-                return OUTPUT_FILE_FORMAT_STRING.format(*file_tuple)
+                return OUTPUT_FILE_FORMAT_STRING.format(*text_tuple)
 
             case 'csv':
-                pass
+                timestamp, url_domain, elapsed_time_seconds = \
+                    [ v for v in string_format_dict.values() ]
+                return CSV_FORMAT_STRING.format(timestamp,url_domain,elapsed_time_seconds)
 
             case _:
-                pass
+                sys.exit(
+                    '\n\n:::::     ERROR     :::::\n'
+                    f'{__name__}:: Function: {parent_frame_info.function} '
+                    f'Line: {parent_frame_info.lineno} - ' 
+                    f'dict_type match case failure.'
+                )
 
     except Exception as error:
-        sys.exit(error)
+        sys.exit(
+            '\n\n:::::     ERROR     :::::\n'
+            f'\n{__name__}:: Function: {parent_frame_info.function} '
+            f'Line: {parent_frame_info.lineno}\n\n'
+        )
 
 
 ####################################################################################################
@@ -331,22 +344,17 @@ def run() -> int:
             csv_dict = generate_output_dict('csv', string_format_args)
 
 
-            # # write to stdout
-            stdout_str = generate_format_string('stdout', stdout_dict)
+            # write to stdout
+            stdout_string = generate_format_string('stdout', stdout_dict)
+            print(stdout_string)
 
-            # # write to file
-            # file_out_str = generate_format_string('output_file_string', output_file_dict)
+            # write text to file
+            text_string = generate_format_string('text', text_dict)
+            append_output_to_file(text_output_file_name, text_string)
 
-
-            # # print(stdout_string)
-            print(stdout_str)
-
-            # # write to text file
-            # # append_output_to_file(text_output_file_name, text_output_file_string)
-            # append_output_to_file(text_output_file_name, file_out_str)
-
-            # # write to csv file
-            # append_output_to_file(csv_output_file_name, csv_output_file_string)
+            # write to csv file
+            csv_string = generate_format_string('csv', csv_dict)
+            append_output_to_file(csv_output_file_name, csv_string)
 
 
             if loop_counter < (cli_arguments.repeat - 1):
