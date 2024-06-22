@@ -78,15 +78,20 @@ def run() -> int:
                 string_format_module.generate_format_string('stdout', stdout_dict)
             print(stdout_string)
 
-            # write text to file
-            text_string = \
-                string_format_module.generate_format_string('text', text_dict)
-            input_file_module.append_output_to_file(text_output_file_name, text_string)
 
-            # write to csv file
-            csv_string = \
-                string_format_module.generate_format_string('csv', csv_dict)
-            input_file_module.append_output_to_file(csv_output_file_name, csv_string)
+            match cli_arguments.suppress:
+                case False:
+                    # write text to file
+                    text_string = \
+                        string_format_module.generate_format_string('text', text_dict)
+                    input_file_module.append_output_to_file(text_output_file_name, text_string)
+
+                    # write to csv file
+                    csv_string = \
+                        string_format_module.generate_format_string('csv', csv_dict)
+                    input_file_module.append_output_to_file(csv_output_file_name, csv_string)
+                case True:
+                    pass
 
 
             if loop_counter < (cli_arguments.repeat - 1):

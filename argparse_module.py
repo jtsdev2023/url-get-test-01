@@ -60,12 +60,12 @@ def init_argparse() -> None:
     )
     parser.add_argument(
         '-c', '--concurrency', required=False, action='store_true',
-        help= \
+        default=False, help= \
             'Utilize ThreadPoolExecutor for concurrency. '
             'Will not write URL output to STDOUT.'
     )
     parser.add_argument('-s', '--suppress', required=False, action='store_true',
-        help='Suppress writing output to file.'
+        default=False, help='Suppress writing output to file.'
     )
 
     args = parser.parse_args()
