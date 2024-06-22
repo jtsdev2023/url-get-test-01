@@ -1,6 +1,6 @@
 import requests
 import argparse_module
-import input_file_module
+import file_handling_module
 import string_format_module
 from datetime import datetime
 from time import sleep, perf_counter_ns
@@ -31,7 +31,7 @@ def run() -> int:
     cli_arguments = argparse_module.init_argparse()
 
     if cli_arguments.file:
-        url_list = input_file_module.create_url_list(cli_arguments.file)
+        url_list = file_handling_module.create_url_list(cli_arguments.file)
 
     else:
         url_list = cli_arguments.url
@@ -43,15 +43,15 @@ def run() -> int:
         while loop_counter < cli_arguments.repeat:
 
             url_index_number = url_list.index(_url)
-            url_domain = input_file_module.get_url_domain(_url)
+            url_domain = file_handling_module.get_url_domain(_url)
 
             # file extension (.txt or .csv etc.) set here
             # NOTE: maybe create a class w/ methods that create specific file type?
             #
             text_output_file_name = \
-                input_file_module.generate_output_file_name(url_domain, 'txt')
+                file_handling_module.generate_output_file_name(url_domain, 'txt')
             csv_output_file_name = \
-                input_file_module.generate_output_file_name(url_domain, 'csv')
+                file_handling_module.generate_output_file_name(url_domain, 'csv')
 
             timestamp = datetime.now().strftime(TIMESTAMP_STR_FORMAT)
 
@@ -84,12 +84,12 @@ def run() -> int:
                     # write text to file
                     text_string = \
                         string_format_module.generate_format_string('text', text_dict)
-                    input_file_module.append_output_to_file(text_output_file_name, text_string)
+                    file_handling_module.append_output_to_file(text_output_file_name, text_string)
 
                     # write to csv file
                     csv_string = \
                         string_format_module.generate_format_string('csv', csv_dict)
-                    input_file_module.append_output_to_file(csv_output_file_name, csv_string)
+                    file_handling_module.append_output_to_file(csv_output_file_name, csv_string)
                 case True:
                     pass
 
