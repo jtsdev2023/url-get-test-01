@@ -65,72 +65,64 @@ def run() -> int:
             string_format_args = [timestamp, url_domain, elapsed_time_seconds, url_request_result]
 
 
-            match cli_arguments.concurrency:
-                case False:
+            match (cli_arguments.suppress, cli_arguments.concurrency):
+                case (True, True):
+                    pass
+
+                case (True, False):
                     # stdout dict            
                     stdout_dict = \
                         string_format_module.generate_output_dict('stdout', string_format_args)
-
                     # write to stdout
                     stdout_string = \
                         string_format_module.generate_format_string('stdout', stdout_dict)
                     print(stdout_string)
 
-                    match cli_arguments.suppress:
-                        case False:
-                            # text file dict
-                            text_dict = \
-                                string_format_module.generate_output_dict(
-                                    'text', string_format_args)
-                            # csv file dict
-                            csv_dict = string_format_module.generate_output_dict(
-                                'csv', string_format_args)
+                case (False, False):          
+                    stdout_dict = \
+                        string_format_module.generate_output_dict('stdout', string_format_args)
+                    stdout_string = \
+                        string_format_module.generate_format_string('stdout', stdout_dict)
+                    print(stdout_string)
 
-                            # write text to file
-                            text_string = \
-                                string_format_module.generate_format_string('text', text_dict)
-                            file_handling_module.append_output_to_file(
-                                text_output_file_name, text_string)
+                    # text file dict
+                    text_dict = \
+                        string_format_module.generate_output_dict('text', string_format_args)
+                    # csv file dict
+                    csv_dict = string_format_module.generate_output_dict('csv', string_format_args)
 
-                            # write to csv file
-                            csv_string = \
-                                string_format_module.generate_format_string('csv', csv_dict)
-                            file_handling_module.append_output_to_file(
-                                csv_output_file_name, csv_string)
-                        case True:
-                            pass
-                
-                case True:
-                    match cli_arguments.suppress:
-                        case False:
-                            # text file dict
-                            text_dict = \
-                                string_format_module.generate_output_dict(
-                                    'text', string_format_args)
-                            # csv file dict
-                            csv_dict = string_format_module.generate_output_dict(
-                                'csv', string_format_args)
+                    # write text to file
+                    text_string = \
+                        string_format_module.generate_format_string('text', text_dict)
+                    
+                    file_handling_module.append_output_to_file(text_output_file_name, text_string)
 
-                            # write text to file
-                            text_string = \
-                                string_format_module.generate_format_string('text', text_dict)
-                            file_handling_module.append_output_to_file(
-                                text_output_file_name, text_string)
+                    # write to csv file
+                    csv_string = \
+                        string_format_module.generate_format_string('csv', csv_dict)
+                    
+                    file_handling_module.append_output_to_file(csv_output_file_name, csv_string)
 
-                            # write to csv file
-                            csv_string = \
-                                string_format_module.generate_format_string('csv', csv_dict)
-                            file_handling_module.append_output_to_file(
-                                csv_output_file_name, csv_string)
-                        case True:
-                            pass
+                case (False, True):
+                    text_dict = \
+                        string_format_module.generate_output_dict('text', string_format_args)
+                    csv_dict = \
+                        string_format_module.generate_output_dict('csv', string_format_args)
+                    text_string = \
+                        string_format_module.generate_format_string('text', text_dict)
+
+                    file_handling_module.append_output_to_file(text_output_file_name, text_string)
+
+                    csv_string = \
+                        string_format_module.generate_format_string('csv', csv_dict)
+                    
+                    file_handling_module.append_output_to_file(csv_output_file_name, csv_string)
 
 
             if loop_counter < (cli_arguments.repeat - 1):
                 sleep(cli_arguments.interval)
             
             loop_counter += 1
-
 
 
 
