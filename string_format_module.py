@@ -29,6 +29,13 @@ OUTPUT_FILE_FORMAT_STRING = (
 # timestamp, url, elapsed_time_seconds
 CSV_FORMAT_STRING = '{},{},{}\n'
 
+# app.py suppress true and concurrency true message
+SUPPRESS_TRUE_CONCURRENCY_TRUE_MSG = (
+    '\n\nSUPPRESS OUTPUT TO FILE - TRUE\n'
+    'RUN CONCURRENT - TRUE\n'
+    '\nconcurrency elapsed runtime: {}'
+)
+
 
 
 ####################################################################################################
